@@ -1,0 +1,103 @@
+{% comment %}
+  Example Liquid template for adding "Go to XWAN.AI" button in Shopify theme
+  
+  Place this in your theme's customer account pages or anywhere customers can access it
+  
+  Options:
+  1. Add to customer account dashboard
+  2. Add to navigation menu
+  3. Add as a section/block in theme customizer
+{% endcomment %}
+
+{% if customer %}
+  {% comment %}
+    Option 1: Simple link with customer data in URL
+    Note: This works but exposes customer data in URL. Better to use Option 2.
+  {% endcomment %}
+  <a href="/apps/xwan-ai-sso/sso?customer_email={{ customer.email | url_param_escape }}&customer_id={{ customer.id }}&first_name={{ customer.first_name | url_param_escape }}&last_name={{ customer.last_name | url_param_escape }}&return_to=/dashboard" 
+     class="btn btn-primary">
+    Go to XWAN.AI
+  </a>
+
+  {% comment %}
+    Option 2: JavaScript-based redirect (recommended)
+    This uses a POST request with customer access token for better security
+  {% endcomment %}
+  <button id="xwanai-sso-btn" class="btn btn-primary" onclick="redirectToXwanAI()">
+    Go to XWAN.AI
+  </button>
+
+  <script>
+    async function redirectToXwanAI() {
+      const btn = document.getElementById('xwanai-sso-btn');
+      btn.disabled = true;
+      btn.textContent = 'Redirecting...';
+
+      try {
+        // Get customer access token from Shopify customer account session
+        // This is available if customer is logged in via Customer Account API
+        const customerAccessToken = getCustomerAccessToken(); // Implement this based on your auth setup
+        
+        if (!customerAccessToken) {
+          // Fallback to query params method
+          const email = '{{ customer.email | url_param_escape }}';
+          const customerId = '{{ customer.id }}';
+          const firstName = '{{ customer.first_name | url_param_escape }}';
+          const lastName = '{{ customer.last_name | url_param_escape }}';
+          
+          window.location.href = `/apps/xwan-ai-sso/sso?customer_email=${email}&customer_id=${customerId}&first_name=${firstName}&last_name=${lastName}&return_to=/dashboard`;
+          return;
+        }
+
+        // POST request with customer access token (more secure)
+        const response = await fetch('/apps/xwan-ai-sso/sso', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Customer-Access-Token': customerAccessToken
+          },
+          body: JSON.stringify({
+            return_to: '/dashboard'
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          window.location.href = data.redirectUrl;
+        } else {
+          throw new Error('SSO redirect failed');
+        }
+      } catch (error) {
+        console.error('SSO error:', error);
+        btn.disabled = false;
+        btn.textContent = 'Go to XWAN.AI';
+        alert('Failed to redirect. Please try again.');
+      }
+    }
+
+    function getCustomerAccessToken() {
+      // Try to get customer access token from cookie or localStorage
+      // This depends on how your Customer Account API is implemented
+      
+      // Method 1: From cookie
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'customerAccessToken') {
+          return value;
+        }
+      }
+      
+      // Method 2: From localStorage (if your theme stores it there)
+      return localStorage.getItem('customerAccessToken');
+    }
+  </script>
+{% else %}
+  {% comment %}
+    Customer not logged in - show login prompt
+  {% endcomment %}
+  <a href="/account/login?checkout_url={{ '/apps/xwan-ai-sso/sso' | url_param_escape }}" 
+     class="btn btn-primary">
+    Login to Access XWAN.AI
+  </a>
+{% endif %}

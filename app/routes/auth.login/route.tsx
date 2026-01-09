@@ -34,7 +34,7 @@ export default function Auth() {
           <s-text-field
             name="shop"
             label="Shop domain"
-            details="example.myshopify.com"
+            details="xwanstudio.myshopify.com"
             value={shop}
             onChange={(e) => setShop(e.currentTarget.value)}
             autocomplete="on"
