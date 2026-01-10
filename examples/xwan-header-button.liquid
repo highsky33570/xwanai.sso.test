@@ -1,0 +1,184 @@
+{% comment %}
+  XWAN.AI Header Button - Liquid Snippet
+  ======================================
+  
+  This snippet adds a "Go to Xwan" button in the Shopify storefront header.
+  The button only appears when a customer is logged in.
+  
+  Installation:
+  1. In Shopify Admin, go to Online Store > Themes
+  2. Click "Actions" > "Edit code" on your active theme
+  3. Go to "Snippets" and create a new file: "xwan-header-button.liquid"
+  4. Paste this code into the file
+  5. In your theme's header template (usually "header.liquid" or "theme.liquid"),
+     add this line where you want the button to appear:
+     {% render 'xwan-header-button' %}
+  
+  Customization:
+  - Modify the button text, classes, and styling to match your theme
+  - Adjust the return_to parameter to redirect to a specific page on xwanai.com
+{% endcomment %}
+
+{% if customer %}
+  <div class="xwan-header-button-wrapper">
+    <a 
+      href="/apps/xwan-ai-sso/sso?return_to=/dashboard" 
+      class="xwan-header-button btn btn-primary"
+      id="xwan-sso-link"
+      data-customer-email="{{ customer.email | url_param_escape }}"
+      data-customer-id="{{ customer.id }}"
+      data-first-name="{{ customer.first_name | url_param_escape }}"
+      data-last-name="{{ customer.last_name | url_param_escape }}"
+    >
+      <span class="xwan-button-text">Go to Xwan</span>
+    </a>
+  </div>
+
+  <style>
+    .xwan-header-button-wrapper {
+      display: inline-block;
+      margin-left: 1rem;
+    }
+    
+    .xwan-header-button {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .xwan-header-button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    .xwan-header-button.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .xwan-header-button.loading .xwan-button-text::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+    
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+    
+    /* Theme-specific overrides - adjust as needed */
+    .xwan-header-button.btn-primary {
+      background-color: #007bff;
+      color: #ffffff;
+      border: 1px solid #007bff;
+    }
+    
+    .xwan-header-button.btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+  </style>
+
+  <script>
+    (function() {
+      'use strict';
+      
+      const ssoLink = document.getElementById('xwan-sso-link');
+      if (!ssoLink) return;
+      
+      // Enhanced redirect with better error handling
+      ssoLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const link = this;
+        const originalText = link.querySelector('.xwan-button-text').textContent;
+        
+        // Show loading state
+        link.classList.add('loading');
+        link.querySelector('.xwan-button-text').textContent = 'Redirecting';
+        
+        // Try to get customer access token from cookie (if available)
+        function getCustomerAccessToken() {
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'customerAccessToken' || name === '__customer_access_token') {
+              return decodeURIComponent(value);
+            }
+          }
+          return null;
+        }
+        
+        const customerAccessToken = getCustomerAccessToken();
+        
+        // If we have a token, use POST method (more secure)
+        if (customerAccessToken) {
+          fetch('/apps/xwan-ai-sso/sso', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Customer-Access-Token': customerAccessToken
+            },
+            body: JSON.stringify({
+              return_to: '/dashboard'
+            })
+          })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('SSO request failed');
+          })
+          .then(data => {
+            if (data.redirectUrl) {
+              window.location.href = data.redirectUrl;
+            } else {
+              throw new Error('No redirect URL received');
+            }
+          })
+          .catch(error => {
+            console.error('SSO error:', error);
+            // Fallback to GET method with query params
+            const email = link.dataset.customerEmail;
+            const customerId = link.dataset.customerId;
+            const firstName = link.dataset.firstName;
+            const lastName = link.dataset.lastName;
+            
+            const fallbackUrl = `/apps/xwan-ai-sso/sso?customer_email=${email}&customer_id=${customerId}&first_name=${firstName}&last_name=${lastName}&return_to=/dashboard`;
+            window.location.href = fallbackUrl;
+          });
+        } else {
+          // No token available, use GET method with query params
+          const email = link.dataset.customerEmail;
+          const customerId = link.dataset.customerId;
+          const firstName = link.dataset.firstName;
+          const lastName = link.dataset.lastName;
+          
+          const url = `/apps/xwan-ai-sso/sso?customer_email=${email}&customer_id=${customerId}&first_name=${firstName}&last_name=${lastName}&return_to=/dashboard`;
+          window.location.href = url;
+        }
+      });
+    })();
+  </script>
+{% else %}
+  {% comment %}
+    Optional: Show login prompt when customer is not logged in
+    Uncomment the code below if you want to show a login button
+  {% endcomment %}
+  {% comment %}
+  <div class="xwan-header-button-wrapper">
+    <a 
+      href="/account/login?checkout_url={{ '/apps/xwan-ai-sso/sso' | url_param_escape }}" 
+      class="xwan-header-button btn btn-secondary"
+    >
+      <span class="xwan-button-text">Login to Access Xwan</span>
+    </a>
+  </div>
+  {% endcomment %}
+{% endif %}

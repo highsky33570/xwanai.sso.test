@@ -10,8 +10,11 @@ node_modules
 /prisma/dev.sqlite-journal
 database.sqlite
 
+# Environment variables - NEVER commit these!
 .env
+.env.local
 .env.*
+!.env.example
 
 
 
