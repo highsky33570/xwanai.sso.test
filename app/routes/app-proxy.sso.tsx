@@ -36,7 +36,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     if (!shop) {
       return generateErrorPage({
         title: "Missing Shop Parameter",
-        message: "Shop parameter is required. Please try again from the Shopify store.",
+        message: `${url.toString()}`,
         errorCode: "missing_shop",
         statusCode: 400,
       });
