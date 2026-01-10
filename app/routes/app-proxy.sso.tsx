@@ -90,20 +90,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       throw new Error("Unable to retrieve customer information");
     }
 
-    // Generate SSO token
-    const token = generateShopifyToXwanAIToken({
-      email,
-      firstName: first_name,
-      lastName: last_name,
-      shopifyCustomerId,
-      returnTo,
-    });
+    return redirect(`http://localhost:3000/app-proxy/sso?email=${email}&firstName=${first_name}&lastName=${last_name}&shopifyCustomerId=${shopifyCustomerId}&returnTo=${returnTo}`);
 
-    // Generate redirect URL to xwanai.com
-    const redirectURL = generateXwanAIRedirectURL(token, returnTo);
+    // // Generate SSO token
+    // const token = generateShopifyToXwanAIToken({
+    //   email,
+    //   firstName: first_name,
+    //   lastName: last_name,
+    //   shopifyCustomerId,
+    //   returnTo,
+    // });
 
-    // Redirect to xwanai.com with SSO token
-    return redirect(redirectURL);
+    // // Generate redirect URL to xwanai.com
+    // const redirectURL = generateXwanAIRedirectURL(token, returnTo);
+
+    // // Redirect to xwanai.com with SSO token
+    // return redirect(redirectURL);
   } catch (error) {
     console.error("SSO token generation error:", error);
     // Redirect to error page or back to shop
