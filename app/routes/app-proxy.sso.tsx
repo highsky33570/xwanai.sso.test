@@ -173,8 +173,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const shopDomain = getShopDomain(shop);
     
     return generateErrorPage({
-      title,
-      message: friendlyMessage,
+      title: `${title} : ${errorMessage.toString()}`,
+      message: `${friendlyMessage} : ${url.toString()}`,
       errorCode,
       shopDomain,
       statusCode,
