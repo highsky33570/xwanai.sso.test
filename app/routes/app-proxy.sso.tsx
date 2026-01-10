@@ -139,7 +139,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     return generateErrorPage({
       title: "SSO token generation failed",
-      message: `${JSON.stringify(token)}`,
+      message: `${token}`,
       errorCode: "sso_token_generation_failed",
       shopDomain: getShopDomain(shop),
       statusCode: 500,
