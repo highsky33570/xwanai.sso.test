@@ -83,11 +83,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     let shopifyCustomerId = customerId || undefined;
     let first_name = firstName || undefined;
     let last_name = lastName || undefined;
+    let customerData = undefined;
 
     if (customerAccessToken && !email) {
       try {
         // Use Storefront API to get customer info
-        const customerData = await fetchCustomerFromStorefront(
+        customerData = await fetchCustomerFromStorefront(
           shop,
           customerAccessToken
         );
@@ -101,6 +102,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         console.error("Failed to fetch customer from Storefront API:", error);
       }
     }
+
+    return generateErrorPage({
+      title: `customer info`,
+      message: `${JSON.stringify(customerData)}`,
+      errorCode: "customer_info",
+      shopDomain: getShopDomain(shop),
+      statusCode: 200,
+    });
 
     if (!email) {
       const shopDomain = getShopDomain(shop);
@@ -147,27 +156,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     let title = "SSO Authentication Failed";
     let statusCode = 500;
 
-    if (errorMessage.includes("Shop parameter") || errorMessage.includes("required")) {
-      errorCode = "missing_shop2";
-      friendlyMessage = "Shop parameter is required. Please try again.";
-      title = "Missing Shop Parameter";
-      statusCode = 400;
-    } else if (errorMessage.includes("customer") || errorMessage.includes("Unable to retrieve")) {
-      errorCode = "missing_customer";
-      friendlyMessage = "Customer information not found. Please log in to your account first.";
-      title = "Authentication Required";
-      statusCode = 401;
-    } else if (errorMessage.includes("token") || errorMessage.includes("SHOPIFY_SSO_SECRET")) {
-      errorCode = "token_generation_failed";
-      friendlyMessage = "Failed to generate authentication token. Please try again.";
-      title = "Token Generation Error";
-      statusCode = 500;
-    } else if (errorMessage.includes("Storefront API") || errorMessage.includes("401") || errorMessage.includes("403")) {
-      errorCode = "invalid_customer_token";
-      friendlyMessage = "Invalid customer session. Please log in again.";
-      title = "Invalid Session";
-      statusCode = 401;
-    }
+    // if (errorMessage.includes("Shop parameter") || errorMessage.includes("required")) {
+    //   errorCode = "missing_shop2";
+    //   friendlyMessage = "Shop parameter is required. Please try again.";
+    //   title = "Missing Shop Parameter";
+    //   statusCode = 400;
+    // } else if (errorMessage.includes("customer") || errorMessage.includes("Unable to retrieve")) {
+    //   errorCode = "missing_customer";
+    //   friendlyMessage = "Customer information not found. Please log in to your account first.";
+    //   title = "Authentication Required";
+    //   statusCode = 401;
+    // } else if (errorMessage.includes("token") || errorMessage.includes("SHOPIFY_SSO_SECRET")) {
+    //   errorCode = "token_generation_failed";
+    //   friendlyMessage = "Failed to generate authentication token. Please try again.";
+    //   title = "Token Generation Error";
+    //   statusCode = 500;
+    // } else if (errorMessage.includes("Storefront API") || errorMessage.includes("401") || errorMessage.includes("403")) {
+    //   errorCode = "invalid_customer_token";
+    //   friendlyMessage = "Invalid customer session. Please log in again.";
+    //   title = "Invalid Session";
+    //   statusCode = 401;
+    // }
 
     // Return error page
     const shopDomain = getShopDomain(shop);
