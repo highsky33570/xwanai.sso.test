@@ -57,10 +57,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // If no customer info and no token, redirect to login
     if (!customerEmail && !customerAccessToken) {
       const shopDomain = shop.includes(".") ? shop : `${shop}.myshopify.com`;
-      return redirect(
-        `https://${shopDomain}/account/login?checkout_url=${encodeURIComponent(request.url)}`
-      );
-    }
+      return redirect(`http://localhost:3000/account`);
+    //   return redirect(
+    //     `https://${shopDomain}/account/login?checkout_url=${encodeURIComponent(request.url)}`
+    //   );
+    // }
 
     // If we have customer access token, fetch customer data from Storefront API
     let email = customerEmail || undefined;
