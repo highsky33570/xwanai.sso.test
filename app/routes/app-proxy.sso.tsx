@@ -62,6 +62,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     //     `https://${shopDomain}/account/login?checkout_url=${encodeURIComponent(request.url)}`
     //   );
     // }
+    }
 
     // If we have customer access token, fetch customer data from Storefront API
     let email = customerEmail || undefined;
