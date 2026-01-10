@@ -37,7 +37,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       return generateErrorPage({
         title: "Missing Shop Parameter",
         message: `${url.toString()}`,
-        errorCode: "missing_shop",
+        errorCode: "missing_shop1",
         statusCode: 400,
       });
     }
@@ -148,7 +148,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     let statusCode = 500;
 
     if (errorMessage.includes("Shop parameter") || errorMessage.includes("required")) {
-      errorCode = "missing_shop";
+      errorCode = "missing_shop2";
       friendlyMessage = "Shop parameter is required. Please try again.";
       title = "Missing Shop Parameter";
       statusCode = 400;
