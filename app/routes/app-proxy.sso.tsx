@@ -101,7 +101,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       } catch (error) {
         console.error("Failed to fetch customer from Storefront API:", error);
         return generateErrorPage({
-          title: `Failed to fetch customer from Storefront API: ${customerAccessToken}`,
+          title: `Failed to fetch customer from Storefront API: ${JSON.stringify(cookies)}`,
           message: `${JSON.stringify(error)}`,
           errorCode: "fetch_customer_error",
           shopDomain: getShopDomain(shop),
@@ -112,7 +112,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     return generateErrorPage({
-      title: `customer info ${customerAccessToken}`,
+      title: `customer info ${customerAccessToken?.toString() ?? "no customer access token"}`,
       message: `${JSON.stringify(customerData)}`,
       errorCode: "customer_info",
       shopDomain: getShopDomain(shop),
