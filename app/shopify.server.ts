@@ -94,7 +94,7 @@ try {
   shopify = shopifyApp({
     apiKey: process.env.SHOPIFY_API_KEY,
     apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
-    apiVersion: ApiVersion.October25,
+    apiVersion: ApiVersion.January26,
     scopes: process.env.SCOPES?.split(","),
     appUrl: appUrl,
     authPathPrefix: "/auth",
