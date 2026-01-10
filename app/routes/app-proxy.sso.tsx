@@ -112,7 +112,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     return generateErrorPage({
-      title: `customer info ${customerAccessToken?.toString() ?? "no customer access token"}`,
+      title: `customer info ${customerAccessToken?.toString() ?? JSON.stringify(cookies)}`,
       message: `${JSON.stringify(customerData)}`,
       errorCode: "customer_info",
       shopDomain: getShopDomain(shop),
