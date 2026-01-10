@@ -100,6 +100,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         }
       } catch (error) {
         console.error("Failed to fetch customer from Storefront API:", error);
+        return generateErrorPage({
+          title: `Failed to fetch customer from Storefront API: ${customerAccessToken}`,
+          message: `${JSON.stringify(error)}`,
+          errorCode: "fetch_customer_error",
+          shopDomain: getShopDomain(shop),
+          statusCode: 500,
+        });
+    
       }
     }
 
