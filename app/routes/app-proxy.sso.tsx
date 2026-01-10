@@ -5,6 +5,7 @@ import {
   generateShopifyToXwanAIToken,
   generateXwanAIRedirectURL,
 } from "../lib/sso.server";
+import { generateErrorPage, getShopDomain } from "../lib/error-page.server";
 
 /**
  * App Proxy Route for SSO from Shopify Storefront to xwanai.com
@@ -33,7 +34,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const shop = url.searchParams.get("shop") || url.searchParams.get("*.myshopify.com");
 
     if (!shop) {
-      throw new Error("Shop parameter is required");
+      return generateErrorPage({
+        title: "Missing Shop Parameter",
+        message: "Shop parameter is required. Please try again from the Shopify store.",
+        errorCode: "missing_shop",
+        statusCode: 400,
+      });
     }
 
     // Try to get customer info from query params (for Liquid template usage)
@@ -54,14 +60,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       customerAccessToken = cookieMatch[1];
     }
 
-    // If no customer info and no token, redirect to login
+    // If no customer info and no token, show error page
     if (!customerEmail && !customerAccessToken) {
-      const shopDomain = shop.includes(".") ? shop : `${shop}.myshopify.com`;
-      return redirect(`http://localhost:3000/account`);
-    //   return redirect(
-    //     `https://${shopDomain}/account/login?checkout_url=${encodeURIComponent(request.url)}`
-    //   );
-    // }
+      const shopDomain = getShopDomain(shop);
+      const loginUrl = shopDomain
+        ? `https://${shopDomain}/account/login?checkout_url=${encodeURIComponent(request.url)}`
+        : undefined;
+
+      return generateErrorPage({
+        title: "Authentication Required",
+        message: "Please log in to your account to continue to XWAN.AI",
+        errorCode: "missing_customer",
+        shopDomain,
+        accountUrl: loginUrl,
+        statusCode: 401,
+        icon: "🔒",
+      });
     }
 
     // If we have customer access token, fetch customer data from Storefront API
@@ -89,33 +103,82 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     if (!email) {
-      throw new Error("Unable to retrieve customer information");
+      const shopDomain = getShopDomain(shop);
+      const loginUrl = shopDomain
+        ? `https://${shopDomain}/account/login?checkout_url=${encodeURIComponent(request.url)}`
+        : undefined;
+
+      return generateErrorPage({
+        title: "Unable to Retrieve Customer Information",
+        message: "We couldn't retrieve your customer information. Please log in again and try.",
+        errorCode: "missing_customer",
+        shopDomain,
+        accountUrl: loginUrl,
+        statusCode: 400,
+      });
     }
 
-    return redirect(`http://localhost:3000/app-proxy/sso?email=${email}&firstName=${first_name}&lastName=${last_name}&shopifyCustomerId=${shopifyCustomerId}&returnTo=${returnTo}`);
 
-    // // Generate SSO token
-    // const token = generateShopifyToXwanAIToken({
-    //   email,
-    //   firstName: first_name,
-    //   lastName: last_name,
-    //   shopifyCustomerId,
-    //   returnTo,
-    // });
+    // Generate SSO token
+    const token = generateShopifyToXwanAIToken({
+      email,
+      firstName: first_name,
+      lastName: last_name,
+      shopifyCustomerId,
+      returnTo,
+    });
 
-    // // Generate redirect URL to xwanai.com
-    // const redirectURL = generateXwanAIRedirectURL(token, returnTo);
+    // Generate redirect URL to xwanai.com
+    const redirectURL = generateXwanAIRedirectURL(token, returnTo);
 
-    // // Redirect to xwanai.com with SSO token
-    // return redirect(redirectURL);
+    // Redirect to xwanai.com with SSO token
+    return redirect(redirectURL);
   } catch (error) {
     console.error("SSO token generation error:", error);
-    // Redirect to error page or back to shop
+    
+    // Get error details
     const url = new URL(request.url);
     const shop = url.searchParams.get("shop") || url.searchParams.get("*.myshopify.com");
-    const shopDomain = shop && shop.includes(".") ? shop : `${shop}.myshopify.com`;
-    const shopURL = shop ? `https://${shopDomain}` : url.origin;
-    return redirect(`${shopURL}/account?error=sso_failed`);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    
+    // Determine error code and user-friendly message
+    let errorCode = "sso_failed";
+    let friendlyMessage = "Unable to complete SSO authentication. Please try again or contact support.";
+    let title = "SSO Authentication Failed";
+    let statusCode = 500;
+
+    if (errorMessage.includes("Shop parameter") || errorMessage.includes("required")) {
+      errorCode = "missing_shop";
+      friendlyMessage = "Shop parameter is required. Please try again.";
+      title = "Missing Shop Parameter";
+      statusCode = 400;
+    } else if (errorMessage.includes("customer") || errorMessage.includes("Unable to retrieve")) {
+      errorCode = "missing_customer";
+      friendlyMessage = "Customer information not found. Please log in to your account first.";
+      title = "Authentication Required";
+      statusCode = 401;
+    } else if (errorMessage.includes("token") || errorMessage.includes("SHOPIFY_SSO_SECRET")) {
+      errorCode = "token_generation_failed";
+      friendlyMessage = "Failed to generate authentication token. Please try again.";
+      title = "Token Generation Error";
+      statusCode = 500;
+    } else if (errorMessage.includes("Storefront API") || errorMessage.includes("401") || errorMessage.includes("403")) {
+      errorCode = "invalid_customer_token";
+      friendlyMessage = "Invalid customer session. Please log in again.";
+      title = "Invalid Session";
+      statusCode = 401;
+    }
+
+    // Return error page
+    const shopDomain = getShopDomain(shop);
+    
+    return generateErrorPage({
+      title,
+      message: friendlyMessage,
+      errorCode,
+      shopDomain,
+      statusCode,
+    });
   }
 };
 
