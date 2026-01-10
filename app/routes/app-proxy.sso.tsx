@@ -111,14 +111,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     }
 
-    return generateErrorPage({
-      title: `customer info ${customerAccessToken?.toString() ?? JSON.stringify(cookies)}`,
-      message: `${JSON.stringify(customerData)}`,
-      errorCode: "customer_info",
-      shopDomain: getShopDomain(shop),
-      statusCode: 200,
-    });
-
     if (!email) {
       const shopDomain = getShopDomain(shop);
       const loginUrl = shopDomain
@@ -143,6 +135,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       lastName: last_name,
       shopifyCustomerId,
       returnTo,
+    });
+
+    return generateErrorPage({
+      title: "SSO token generation failed",
+      message: `${JSON.stringify(token)}`,
+      errorCode: "sso_token_generation_failed",
+      shopDomain: getShopDomain(shop),
+      statusCode: 500,
     });
 
     // Generate redirect URL to xwanai.com
