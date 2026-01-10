@@ -112,7 +112,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     return generateErrorPage({
-      title: `customer info`,
+      title: `customer info ${customerAccessToken}`,
       message: `${JSON.stringify(customerData)}`,
       errorCode: "customer_info",
       shopDomain: getShopDomain(shop),
