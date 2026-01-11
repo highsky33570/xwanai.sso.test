@@ -2,7 +2,7 @@
 
 client_id = "7f9df6d4b35bd039d1dd875765d65652"
 name = "XWAN AI SSO"
-application_url = "https://xwanai-sso-test.vercel.app/"
+application_url = "https://xwanai-sso-test.vercel.app"
 embedded = true
 
 [webhooks]

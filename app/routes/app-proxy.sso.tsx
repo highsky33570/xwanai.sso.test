@@ -32,13 +32,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const url = new URL(request.url);
     const shop = url.searchParams.get("shop") || url.searchParams.get("*.myshopify.com");
-    return generateErrorPage({
-      title: "Authentication Required",
-      message: "Please log in to your account to continue to XWAN.AI",
-      errorCode: "missing_customer",
-      shopDomain: getShopDomain(shop),
-      statusCode: 400,
-    });
+
+    if (!shop) {
+      return generateErrorPage({
+        title: "Missing Shop Parameter",
+        message: `${url.toString()}`,
+        errorCode: "missing_shop1",
+        statusCode: 400,
+      });
+    }
 
     // Try to get customer info from query params (for Liquid template usage)
     const customerEmail = url.searchParams.get("customer_email");
@@ -124,12 +126,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         statusCode: 400,
       });
     }
+
     return generateErrorPage({
       title: "SSO token generation failed",
       message: `${"token"}`,
       errorCode: "sso_token_generation_failed",
       shopDomain: getShopDomain(shop),
-      statusCode: 500,
+      statusCode: 400,
     });
 
     // Generate SSO token
