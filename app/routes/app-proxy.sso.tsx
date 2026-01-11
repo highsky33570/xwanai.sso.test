@@ -138,15 +138,53 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       returnTo,
     });
 
-    return generateErrorPage({
-      title: "redirectURL token generation failed",
-      message: `${redirectURL}`,
-      errorCode: "redirectURL",
-      shopDomain: getShopDomain(shop),
-      statusCode: 400,
-    });
+    // Fetch content from redirectURL
+    try {
+      const response = await fetch(redirectURL, {
+        method: "GET",
+        headers: {
+          "Accept": "text/html,application/json",
+          "User-Agent": request.headers.get("User-Agent") || "Shopify-App-Proxy",
+        },
+      });
 
-    // Redirect to xwanai.com with customer data
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get("Content-Type") || "";
+      
+      // If it's JSON, parse and return as JSON
+      if (contentType.includes("application/json")) {
+        const jsonData = await response.json();
+        return Response.json(jsonData, {
+          status: response.status,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+
+      // If it's HTML or other text, return as HTML
+      const htmlContent = await response.text();
+      return new Response(htmlContent, {
+        status: response.status,
+        headers: {
+          "Content-Type": contentType || "text/html",
+        },
+      });
+    } catch (fetchError) {
+      console.error("Error fetching redirectURL content:", fetchError);
+      return generateErrorPage({
+        title: "Failed to Fetch Content",
+        message: `Unable to fetch content from: ${redirectURL}\nError: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`,
+        errorCode: "fetch_content_error",
+        shopDomain: getShopDomain(shop),
+        statusCode: 500,
+      });
+    }
+
+    // Alternative: Redirect to xwanai.com with customer data
     // return redirect(redirectURL);
   } catch (error) {
     console.error("SSO token generation error:", error);
