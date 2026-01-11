@@ -3,6 +3,7 @@ import { redirect } from "react-router";
 import { authenticate } from "../shopify.server";
 import {
   generateXwanAIRedirectURL,
+  XWANAI_FRONTEND_DOMAIN,
 } from "../lib/sso.server";
 import { generateErrorPage, getShopDomain } from "../lib/error-page.server";
 
@@ -162,21 +163,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         // Response structure: { status, message, session: { access_token, refresh_token, ... }, user, redirect_to }
         const accessToken = jsonData.session?.access_token || jsonData.access_token;
         const refreshToken = jsonData.session?.refresh_token || jsonData.refresh_token;
-        const redirectTo = jsonData.redirect_to || returnTo || "/";
+        const redirectTo = "/";
 
         if (!accessToken) {
           throw new Error("No access_token found in response");
         }
 
-        // Build redirect URL with access_token
-        const frontendDomain = process.env.XWANAI_DOMAIN?.replace(/^https?:\/\//, "").split("/")[0] || "xwanai-front-vercel.vercel.app";
-        const frontendUrl = process.env.XWANAI_DOMAIN || `https://${frontendDomain}`;
-        
-        const redirectUrl = new URL(frontendUrl);
+        // Build redirect URL with access_token using frontend domain
+        const redirectUrl = new URL(XWANAI_FRONTEND_DOMAIN);
         redirectUrl.searchParams.set("access_token", accessToken);
         if (refreshToken) {
           redirectUrl.searchParams.set("refresh_token", refreshToken);
         }
+
+        redirectUrl.searchParams.set("redirect_to", redirectTo);
 
         // Redirect to frontend site with access_token
         return redirect(redirectUrl.toString());

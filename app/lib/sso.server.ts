@@ -10,6 +10,7 @@ import crypto from "crypto";
 const SHOPIFY_SSO_SECRET = process.env.SHOPIFY_SSO_SECRET || "";
 const XWANAI_SSO_SECRET = process.env.XWANAI_SSO_SECRET || "";
 const XWANAI_DOMAIN = process.env.XWANAI_DOMAIN || "https://www.xwanai.com";
+export const XWANAI_FRONTEND_DOMAIN = process.env.XWANAI_FRONTEND_DOMAIN || process.env.XWANAI_DOMAIN || "https://www.xwanai.com";
 const TOKEN_EXPIRY_MINUTES = 15;
 
 export interface CustomerSSOData {
