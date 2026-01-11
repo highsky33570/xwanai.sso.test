@@ -127,30 +127,24 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       });
     }
 
-    return generateErrorPage({
-      title: "SSO token generation failed",
-      message: `${"token"}`,
-      errorCode: "sso_token_generation_failed",
-      shopDomain: getShopDomain(shop),
-      statusCode: 400,
-    });
+
 
     // // Generate SSO token
-    // const token = generateShopifyToXwanAIToken({
-    //   email,
-    //   firstName: first_name,
-    //   lastName: last_name,
-    //   shopifyCustomerId,
-    //   returnTo,
-    // });
+    const token = generateShopifyToXwanAIToken({
+      email,
+      firstName: first_name,
+      lastName: last_name,
+      shopifyCustomerId,
+      returnTo,
+    });
 
-    // return generateErrorPage({
-    //   title: "SSO token generation failed",
-    //   message: `${token}`,
-    //   errorCode: "sso_token_generation_failed",
-    //   shopDomain: getShopDomain(shop),
-    //   statusCode: 500,
-    // });
+    return generateErrorPage({
+      title: "SSO token generation failed",
+      message: `${token}`,
+      errorCode: "sso_token_generation_failed",
+      shopDomain: getShopDomain(shop),
+      statusCode: 500,
+    });
 
     // // Generate redirect URL to xwanai.com
     // const redirectURL = generateXwanAIRedirectURL(token, returnTo);
