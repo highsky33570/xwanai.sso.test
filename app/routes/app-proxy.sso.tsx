@@ -126,7 +126,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         statusCode: 400,
       });
     }
-
+    return generateErrorPage({
+      title: "SSO token generation failed",
+      message: `${"token"}`,
+      errorCode: "sso_token_generation_failed",
+      shopDomain: getShopDomain(shop),
+      statusCode: 500,
+    });
 
     // Generate SSO token
     const token = generateShopifyToXwanAIToken({
