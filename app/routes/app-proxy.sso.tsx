@@ -135,28 +135,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       statusCode: 400,
     });
 
-    // Generate SSO token
-    const token = generateShopifyToXwanAIToken({
-      email,
-      firstName: first_name,
-      lastName: last_name,
-      shopifyCustomerId,
-      returnTo,
-    });
+    // // Generate SSO token
+    // const token = generateShopifyToXwanAIToken({
+    //   email,
+    //   firstName: first_name,
+    //   lastName: last_name,
+    //   shopifyCustomerId,
+    //   returnTo,
+    // });
 
-    return generateErrorPage({
-      title: "SSO token generation failed",
-      message: `${token}`,
-      errorCode: "sso_token_generation_failed",
-      shopDomain: getShopDomain(shop),
-      statusCode: 500,
-    });
+    // return generateErrorPage({
+    //   title: "SSO token generation failed",
+    //   message: `${token}`,
+    //   errorCode: "sso_token_generation_failed",
+    //   shopDomain: getShopDomain(shop),
+    //   statusCode: 500,
+    // });
 
-    // Generate redirect URL to xwanai.com
-    const redirectURL = generateXwanAIRedirectURL(token, returnTo);
+    // // Generate redirect URL to xwanai.com
+    // const redirectURL = generateXwanAIRedirectURL(token, returnTo);
 
-    // Redirect to xwanai.com with SSO token
-    return redirect(redirectURL);
+    // // Redirect to xwanai.com with SSO token
+    // return redirect(redirectURL);
   } catch (error) {
     console.error("SSO token generation error:", error);
     
