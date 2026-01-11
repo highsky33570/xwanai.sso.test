@@ -157,12 +157,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       // If it's JSON, parse and return as JSON
       if (contentType.includes("application/json")) {
         const jsonData = await response.json();
-        return Response.json(jsonData, {
-          status: response.status,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+
+        // https://yoursite.com/?access_token=xxx&refresh_token=yyy&redirect_to=/dashboard
+        return redirect(`https://xwanai-front-vercel.vercel.app?access_token=${jsonData.access_token}&refresh_token=${jsonData.refresh_token}&redirect_to=/`);
+        // return Response.json(jsonData, {
+        //   status: response.status,
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        // });
       }
 
       // If it's HTML or other text, return as HTML
