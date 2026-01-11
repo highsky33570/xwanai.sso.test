@@ -158,14 +158,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       if (contentType.includes("application/json")) {
         const jsonData = await response.json();
 
-        // https://yoursite.com/?access_token=xxx&refresh_token=yyy&redirect_to=/dashboard
-        return redirect(`https://xwanai-front-vercel.vercel.app?access_token=${jsonData.access_token}&refresh_token=${jsonData.refresh_token}&redirect_to=/`);
-        // return Response.json(jsonData, {
-        //   status: response.status,
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        // });
+        // Extract tokens from nested session object
+        // Response structure: { status, message, session: { access_token, refresh_token, ... }, user, redirect_to }
+        const accessToken = jsonData.session?.access_token || jsonData.access_token;
+        const refreshToken = jsonData.session?.refresh_token || jsonData.refresh_token;
+        const redirectTo = jsonData.redirect_to || returnTo || "/";
+
+        if (!accessToken) {
+          throw new Error("No access_token found in response");
+        }
+
+        // Build redirect URL with access_token
+        const frontendDomain = process.env.XWANAI_DOMAIN?.replace(/^https?:\/\//, "").split("/")[0] || "xwanai-front-vercel.vercel.app";
+        const frontendUrl = process.env.XWANAI_DOMAIN || `https://${frontendDomain}`;
+        
+        const redirectUrl = new URL(redirectTo, frontendUrl);
+        redirectUrl.searchParams.set("access_token", accessToken);
+        if (refreshToken) {
+          redirectUrl.searchParams.set("refresh_token", refreshToken);
+        }
+
+        // Redirect to frontend site with access_token
+        return redirect(redirectUrl.toString());
       }
 
       // If it's HTML or other text, return as HTML
