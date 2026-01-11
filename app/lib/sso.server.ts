@@ -130,7 +130,7 @@ export function validateShopifyToXwanAIToken(token: string): CustomerSSOData | n
  * 
  * Format: /api/v1/auth/shopify-callback?email=...&shop=...&customer_id=...&first_name=...&last_name=...&return_to=...
  * 
- * Example: GET /api/v1/auth/shopify-callback?email=customer@example.com&shop=myshop.myshopify.com&customer_id=123456&first_name=John&last_name=Doe&return_to=/dashboard
+ * Example: GET /api/v1/auth/shopify-callback?email=customer@example.com&shop=myshop.myshopify.com&customer_id=123456&first_name=John&last_name=Doe&return_to=/
  */
 export function generateXwanAIRedirectURL(
   customerData: {

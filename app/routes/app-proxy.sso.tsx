@@ -20,7 +20,7 @@ import { generateErrorPage, getShopDomain } from "../lib/error-page.server";
  * This will make the route accessible at: https://your-shop.myshopify.com/apps/xwan-ai-sso/sso
  * 
  * Usage:
- * 1. GET request (from Liquid template): /apps/xwan-ai-sso/sso?return_to=/dashboard
+ * 1. GET request (from Liquid template): /apps/xwan-ai-sso/sso?return_to=/
  * 2. POST request (with customer access token): Include X-Customer-Access-Token header
  */
 
@@ -161,7 +161,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         // Extract tokens from nested session object
         const accessToken = jsonData.session?.access_token || jsonData.access_token;
         const refreshToken = jsonData.session?.refresh_token || jsonData.refresh_token;
-        const redirectTo = jsonData.redirect_to || returnTo || "/";
+        const redirectTo = "/";
 
         if (!accessToken) {
           throw new Error("No access_token found in response");

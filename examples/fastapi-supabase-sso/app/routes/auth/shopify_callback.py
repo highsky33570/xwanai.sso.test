@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/auth/shopify-callback")
 async def shopify_callback(
     token: str = Query(..., description="SSO token from Shopify"),
-    return_to: str = Query("/dashboard", description="Return URL after authentication"),
+    return_to: str = Query("/", description="Return URL after authentication"),
 ):
     """
     Handle SSO callback from Shopify
