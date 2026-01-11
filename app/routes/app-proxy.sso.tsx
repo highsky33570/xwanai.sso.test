@@ -6,6 +6,7 @@ import {
   XWANAI_FRONTEND_DOMAIN,
 } from "../lib/sso.server";
 import { generateErrorPage, getShopDomain } from "../lib/error-page.server";
+import { generateLoadingPage } from "../lib/loading-page.server";
 
 /**
  * App Proxy Route for SSO from Shopify Storefront to xwanai.com
@@ -139,67 +140,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       returnTo,
     });
 
-    // Fetch content from redirectURL
-    try {
-      const response = await fetch(redirectURL, {
-        method: "GET",
-        headers: {
-          "Accept": "text/html,application/json",
-          "User-Agent": request.headers.get("User-Agent") || "Shopify-App-Proxy",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-      }
-
-      const contentType = response.headers.get("Content-Type") || "";
-      
-      // If it's JSON, parse and return as JSON
-      if (contentType.includes("application/json")) {
-        const jsonData = await response.json();
-
-        // Extract tokens from nested session object
-        // Response structure: { status, message, session: { access_token, refresh_token, ... }, user, redirect_to }
-        const accessToken = jsonData.session?.access_token || jsonData.access_token;
-        const refreshToken = jsonData.session?.refresh_token || jsonData.refresh_token;
-        const redirectTo = "/";
-
-        if (!accessToken) {
-          throw new Error("No access_token found in response");
-        }
-
-        // Build redirect URL with access_token using frontend domain
-        const redirectUrl = new URL(XWANAI_FRONTEND_DOMAIN);
-        redirectUrl.searchParams.set("access_token", accessToken);
-        if (refreshToken) {
-          redirectUrl.searchParams.set("refresh_token", refreshToken);
-        }
-
-        redirectUrl.searchParams.set("redirect_to", redirectTo);
-
-        // Redirect to frontend site with access_token
-        return redirect(redirectUrl.toString());
-      }
-
-      // If it's HTML or other text, return as HTML
-      const htmlContent = await response.text();
-      return new Response(htmlContent, {
-        status: response.status,
-        headers: {
-          "Content-Type": contentType || "text/html",
-        },
-      });
-    } catch (fetchError) {
-      console.error("Error fetching redirectURL content:", fetchError);
-      return generateErrorPage({
-        title: "Failed to Fetch Content",
-        message: `Unable to fetch content from: ${redirectURL}\nError: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`,
-        errorCode: "fetch_content_error",
-        shopDomain: getShopDomain(shop),
-        statusCode: 500,
-      });
-    }
+    // Return loading page that will handle the authentication client-side
+    // This shows a loading indicator while the backend processes the SSO
+    return generateLoadingPage(redirectURL);
 
     // Alternative: Redirect to xwanai.com with customer data
     // return redirect(redirectURL);
