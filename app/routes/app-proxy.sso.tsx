@@ -172,7 +172,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         const frontendDomain = process.env.XWANAI_DOMAIN?.replace(/^https?:\/\//, "").split("/")[0] || "xwanai-front-vercel.vercel.app";
         const frontendUrl = process.env.XWANAI_DOMAIN || `https://${frontendDomain}`;
         
-        const redirectUrl = new URL(redirectTo, frontendUrl);
+        const redirectUrl = new URL(frontendUrl);
         redirectUrl.searchParams.set("access_token", accessToken);
         if (refreshToken) {
           redirectUrl.searchParams.set("refresh_token", refreshToken);
