@@ -5,9 +5,13 @@
 import { XWANAI_FRONTEND_DOMAIN } from "./sso.server";
 
 /**
- * Generate HTML loading page with embedded data for client-side processing
+ * Generate HTML loading page that auto-submits a form to process SSO server-side
+ * This keeps the API call server-side (secure) while showing loading UI
  */
-export function generateLoadingPage(redirectURL: string): Response {
+export function generateLoadingPage(
+  redirectURL: string,
+  processUrl: string
+): Response {
   const loadingHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -35,11 +39,6 @@ export function generateLoadingPage(redirectURL: string): Response {
       padding: 40px;
       text-align: center;
     }
-    .loading-icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-      animation: spin 1s linear infinite;
-    }
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
@@ -64,15 +63,6 @@ export function generateLoadingPage(redirectURL: string): Response {
       font-size: 16px;
       line-height: 1.5;
     }
-    .error-message {
-      display: none;
-      color: #d32f2f;
-      font-size: 14px;
-      margin-top: 20px;
-      padding: 12px;
-      background: #ffebee;
-      border-radius: 6px;
-    }
   </style>
 </head>
 <body>
@@ -80,57 +70,13 @@ export function generateLoadingPage(redirectURL: string): Response {
     <div class="spinner"></div>
     <h1>Authenticating...</h1>
     <p>Please wait while we log you into XWAN.AI</p>
-    <div id="error-message" class="error-message"></div>
   </div>
+  <form id="sso-form" method="POST" action="${processUrl}" style="display: none;">
+    <input type="hidden" name="redirect_url" value="${redirectURL.replace(/"/g, '&quot;')}">
+  </form>
   <script>
-    (function() {
-      const redirectURL = ${JSON.stringify(redirectURL)};
-      const errorDiv = document.getElementById('error-message');
-      
-      // Fetch from backend API
-      fetch(redirectURL, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to authenticate: ' + response.status + ' ' + response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Extract tokens from response
-        const accessToken = data.session?.access_token || data.access_token;
-        const refreshToken = data.session?.refresh_token || data.refresh_token;
-        const redirectTo = data.redirect_to || '/';
-        const frontendDomain = ${JSON.stringify(XWANAI_FRONTEND_DOMAIN)};
-        
-        if (!accessToken) {
-          throw new Error('No access token received');
-        }
-        
-        // Build redirect URL
-        const redirectUrl = new URL(frontendDomain);
-        redirectUrl.searchParams.set('access_token', accessToken);
-        if (refreshToken) {
-          redirectUrl.searchParams.set('refresh_token', refreshToken);
-        }
-        redirectUrl.searchParams.set('redirect_to', redirectTo);
-        
-        // Redirect to frontend
-        window.location.href = redirectUrl.toString();
-      })
-      .catch(error => {
-        console.error('Authentication error:', error);
-        errorDiv.textContent = 'Authentication failed: ' + error.message + '. Please try again.';
-        errorDiv.style.display = 'block';
-        document.querySelector('.spinner').style.display = 'none';
-        document.querySelector('h1').textContent = 'Authentication Failed';
-        document.querySelector('p').textContent = '';
-      });
-    })();
+    // Auto-submit form to process SSO server-side
+    document.getElementById('sso-form').submit();
   </script>
 </body>
 </html>
