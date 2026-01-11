@@ -2,7 +2,6 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
 import { authenticate } from "../shopify.server";
 import {
-  generateShopifyToXwanAIToken,
   generateXwanAIRedirectURL,
 } from "../lib/sso.server";
 import { generateErrorPage, getShopDomain } from "../lib/error-page.server";
@@ -126,30 +125,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         statusCode: 400,
       });
     }
+    // Get shop domain
+    const shopDomain = shop.includes(".") ? shop : `${shop}.myshopify.com`;
 
-
-
-    // // Generate SSO token
-    const token = generateShopifyToXwanAIToken({
+    // Generate redirect URL to xwanai.com with customer data as query parameters
+    const redirectURL = generateXwanAIRedirectURL({
       email,
+      shop: shopDomain,
+      customerId: shopifyCustomerId,
       firstName: first_name,
       lastName: last_name,
-      shopifyCustomerId,
       returnTo,
     });
 
     return generateErrorPage({
-      title: "SSO token generation failed",
-      message: `${token}`,
-      errorCode: "sso_token_generation_failed",
+      title: "redirectURL token generation failed",
+      message: `${redirectURL}`,
+      errorCode: "redirectURL",
       shopDomain: getShopDomain(shop),
-      statusCode: 500,
+      statusCode: 400,
     });
 
-    // // Generate redirect URL to xwanai.com
-    // const redirectURL = generateXwanAIRedirectURL(token, returnTo);
-
-    // // Redirect to xwanai.com with SSO token
+    // Redirect to xwanai.com with customer data
     // return redirect(redirectURL);
   } catch (error) {
     console.error("SSO token generation error:", error);
@@ -229,19 +226,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const body = await request.json().catch(() => ({}));
     const returnTo = body.return_to || url.searchParams.get("return_to") || undefined;
 
-    // Generate SSO token
-    const token = generateShopifyToXwanAIToken({
+    // Get shop domain
+    const shopDomain = shop.includes(".") ? shop : `${shop}.myshopify.com`;
+
+    // Generate redirect URL to xwanai.com with customer data as query parameters
+    const redirectURL = generateXwanAIRedirectURL({
       email: customerData.email,
+      shop: shopDomain,
+      customerId: customerData.id,
       firstName: customerData.firstName ?? undefined,
       lastName: customerData.lastName ?? undefined,
-      shopifyCustomerId: customerData.id,
       returnTo,
     });
 
-    // Generate redirect URL to xwanai.com
-    const redirectURL = generateXwanAIRedirectURL(token, returnTo);
-
-    return Response.json({ redirectUrl: redirectURL, token });
+    return Response.json({ redirectUrl: redirectURL });
   } catch (error) {
     console.error("SSO token generation error:", error);
     return Response.json({ error: "SSO token generation failed" }, { status: 500 });

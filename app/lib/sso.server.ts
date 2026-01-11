@@ -126,13 +126,41 @@ export function validateShopifyToXwanAIToken(token: string): CustomerSSOData | n
 
 /**
  * Generate SSO redirect URL for xwanai.com
+ * 
+ * Format: /api/v1/auth/shopify-callback?email=...&shop=...&customer_id=...&first_name=...&last_name=...&return_to=...
+ * 
+ * Example: GET /api/v1/auth/shopify-callback?email=customer@example.com&shop=myshop.myshopify.com&customer_id=123456&first_name=John&last_name=Doe&return_to=/dashboard
  */
-export function generateXwanAIRedirectURL(token: string, returnTo?: string): string {
-  const url = new URL(`${XWANAI_DOMAIN}/auth/shopify-callback`);
-  url.searchParams.set("token", token);
-  if (returnTo) {
-    url.searchParams.set("return_to", returnTo);
+export function generateXwanAIRedirectURL(
+  customerData: {
+    email: string;
+    shop: string;
+    customerId?: string;
+    firstName?: string;
+    lastName?: string;
+    returnTo?: string;
   }
+): string {
+  const url = new URL(`${XWANAI_DOMAIN}/api/v1/auth/shopify-callback`);
+  
+  // Required parameters
+  url.searchParams.set("email", customerData.email);
+  url.searchParams.set("shop", customerData.shop);
+  
+  // Optional parameters
+  if (customerData.customerId) {
+    url.searchParams.set("customer_id", customerData.customerId);
+  }
+  if (customerData.firstName) {
+    url.searchParams.set("first_name", customerData.firstName);
+  }
+  if (customerData.lastName) {
+    url.searchParams.set("last_name", customerData.lastName);
+  }
+  if (customerData.returnTo) {
+    url.searchParams.set("return_to", customerData.returnTo);
+  }
+  
   return url.toString();
 }
 
